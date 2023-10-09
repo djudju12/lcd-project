@@ -1,0 +1,12 @@
+{
+   "files.associations": {
+      "*.sql": "sql",
+      "*.ddl": "oracle",
+      "*.dml": "oracle",
+      "*.pks": "oracle",
+      "*.pkb": "oracle",
+      "*.prg": "harbour",
+      "*.rkt": "scheme",
+      "stdbool.h": "c"
+   }
+}
