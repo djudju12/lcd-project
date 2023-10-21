@@ -7,6 +7,7 @@
       "*.pkb": "oracle",
       "*.prg": "harbour",
       "*.rkt": "scheme",
-      "stdbool.h": "c"
+      "stdbool.h": "c",
+      "raygui.h": "c"
    }
 }

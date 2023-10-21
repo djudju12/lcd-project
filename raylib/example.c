@@ -6,16 +6,15 @@
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 
-#define SCREEN_WIDTH   1920
-#define SCREEN_HEIGHT  1080
-#define SCREEN_YOFFSET 20
+#define WINDOW_NAME    "LCD Project"
+#define FPS            60
+#define WINDOW_WIDTH   1200
+#define WINDOW_HEIGHT  800
 
 #define LCD_OUTER_ROWS 2
 #define LCD_OUTER_COLS 16
 #define LCD_INNER_ROWS 8
 #define LCD_INNER_COLS 5
-#define LCD_STARTY     20
-#define LCD_STARTX     0
 #define TOTAL_CELLS    (LCD_OUTER_ROWS*LCD_OUTER_COLS*LCD_INNER_ROWS*LCD_INNER_COLS)
 #define CELL_SIZE      10
 #define CELL_MARGIN    2
@@ -25,46 +24,39 @@ typedef struct {
     bool clicked;
 } Pixel;
 
+typedef struct {
+    bool window_active;
+    bool grid_active;
+    Vector2 mouse_pos;
+} Environment;
+
 void draw_grid(Pixel pixels[]);
-void init_grid(Pixel pixels[]);
+void init_grid(Pixel pixels[], int startx, int starty);
 void toggle_pixel(Pixel *pixel);
+void update(Environment *env);
+void render(Environment *env);
 
 static Pixel pixels[TOTAL_CELLS];
 
 int main()
 {
-    init_grid(pixels);
     SetConfigFlags(FLAG_WINDOW_UNDECORATED);
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "LCD 2000");
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "LCD 2000");
 
-    const char *window_name = "LCD Project";
+    Environment env = { true, false, (Vector2) { 0, 0 } };
     
-    bool window_active = true;
-    Vector2 mouse_pos;
-    
+    int startx = WINDOW_WIDTH/2 - (LCD_OUTER_COLS*LCD_INNER_COLS)*(CELL_SIZE+CELL_MARGIN)/2;
+    int starty = 40;
+    init_grid(pixels, startx, starty);
+
     SetTargetFPS(60);
-    while (!WindowShouldClose() && window_active)
+    while (!WindowShouldClose() && env.window_active)
     {
+        update(&env);
         BeginDrawing();
         {
-            ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR))); 
-
-            if (window_active) {
-                window_active = !GuiWindowBox((Rectangle){ 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT }, window_name);
-            }
-
-            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-                mouse_pos = GetMousePosition();
-                for (int i = 0; i < TOTAL_CELLS; i++) {
-                    if (CheckCollisionPointRec(mouse_pos, pixels[i].pos)) {
-                        toggle_pixel(&pixels[i]);
-                    }
-                }
-            }
-
-            draw_grid(pixels);
+            render(&env);
         }
-
         EndDrawing();
     }
 
@@ -73,7 +65,38 @@ int main()
     return 0;
 }
 
-void init_grid(Pixel pixels[])
+void update(Environment *env)
+{
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        env->mouse_pos = GetMousePosition();
+        for (int i = 0; i < TOTAL_CELLS; i++) {
+            if (CheckCollisionPointRec(env->mouse_pos, pixels[i].pos)) {
+                toggle_pixel(&pixels[i]);
+            }
+        }
+    }
+
+    // if button g pressed, toggle grid
+    if (IsKeyPressed(KEY_G)) {
+        env->grid_active = !env->grid_active;
+    }
+}
+
+void render(Environment *env)
+{
+    ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR))); 
+    if (env->window_active) {
+        env->window_active = !GuiWindowBox((Rectangle){ 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT }, WINDOW_NAME);
+    }
+
+    if (env->grid_active) {
+        GuiGrid((Rectangle) { 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT }, NULL, 40, 2, NULL);
+    }
+
+    draw_grid(pixels);
+}
+
+void init_grid(Pixel pixels[], int startx, int starty)
 {
     float x, y;
     int index, offsetx, offsety;
@@ -85,8 +108,8 @@ void init_grid(Pixel pixels[])
         for (size_t j = 0; j < LCD_OUTER_COLS; j++) {
             for (size_t k = 0; k < LCD_INNER_ROWS; k++) {
                 for (size_t l = 0; l < LCD_INNER_COLS; l++) {
-                    x = LCD_STARTX + offsetx*j + ((CELL_SIZE+CELL_MARGIN)*(l + LCD_INNER_COLS*j));
-                    y = LCD_STARTY + offsety*i + ((CELL_SIZE+CELL_MARGIN)*(k + LCD_INNER_ROWS*i));
+                    x = startx + offsetx*j + ((CELL_SIZE+CELL_MARGIN)*(l + LCD_INNER_COLS*j));
+                    y = starty + offsety*i + ((CELL_SIZE+CELL_MARGIN)*(k + LCD_INNER_ROWS*i));
                     pixels[index].clicked = false;
                     pixels[index].pos = (Rectangle) { x, y, CELL_SIZE, CELL_SIZE };
                     index++;
