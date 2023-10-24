@@ -6,11 +6,11 @@ LDFLAGS=-lraylib -lm -lpthread -ldl -lrt
 
 RAYLIB_PATH=$HOME/Software/raylib
 
-SRC=raylib/example.c
+SRC=lcd.c
 
 OBJ=$(SRC:.c=.o)
 
-BIN=example
+BIN=lcd
 
 all: $(BIN)
 
