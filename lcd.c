@@ -10,8 +10,8 @@ int main()
     Environment env = {0};
     env.window_active = true;
     env.grid_active = true;
+    env.make_new_code = true;
     env.camera.zoom = 1.0f;
-    
     
     init_grid(grid);
     init_buttons(buttons);
@@ -75,7 +75,7 @@ void render(Environment *env)
 
         draw_grid(grid);
         draw_buttons(buttons);
-        // draw_code(gri);
+        draw_code(grid, env);
     }
     EndMode2D();
 }
@@ -113,15 +113,14 @@ void draw_grid(Grid grid)
     }
 }
 
-void explode(Environment *env) {
-    printf("EXPLODE\n");
-    env->window_active = false;
+void new_code(Environment *env) {
+    env->make_new_code = true;
 }
 
 void init_buttons(Button buttons[])
 {
     Rectangle explosive_bounds = { WINDOW_WIDTH/2, WINDOW_HEIGHT/2, 50, 50 };
-    Button explosive = { explosive_bounds, "EXPLODE", explode };
+    Button explosive = { explosive_bounds, "Gen. Code", new_code };
     register_button(explosive);
 }
 
@@ -162,54 +161,46 @@ void ajust_zoom(Environment *env, float wheel)
     if (env->camera.zoom < 1.0f) env->camera.zoom = 1.0f;
 }
 
-void draw_code(Grid grid)
+void draw_code(Grid grid, Environment *env)
 {
     Rectangle bounds = {
         0,
         WINDOW_HEIGHT/2,
-        400,
-        400
+        800,
+        800
     };
 
-//     printf("%s", TEMPLATE);
-//    printf("byte customChars[][8] = {\n");
-
-//    for (size_t k = 0; k < main_box.active_rows; k++)
-//       for (size_t z = 0; z < main_box.active_cols; z++)
-//       {
-//          printf("\t{");
-//          for (size_t i = 0; i < ROWS; i++)
-//          {
-//             printf("B");
-//             for (size_t j = 0; j < COLS; j++)
-//             {
-//                printf("%d", main_box.main_grid[k][z][i][j]);
-//             }
-//             if (i < ROWS - 1)
-//                printf(", ");
-//          }
-//          printf("}, //  %zux%zu\n", k, z);
-//       }
-
-//    printf("};\n");
-
-    char text[MAXCODE] = {
-        "void main() {\n"
-        "    printf(\"Hello World!\");\n"
-        "}\n"
-    };
-
-    strcat(text, TEMPLATE);
-    for (size_t i = 0; i < LCD_OUTER_ROWS; i++) {
-        for (size_t j = 0; j < LCD_OUTER_COLS; j++) {
-            for (size_t k = 0; k < LCD_INNER_ROWS; k++) {
-                for (size_t l = 0; l < LCD_INNER_COLS; l++) {
+    char temp[100];
+    if (env->make_new_code) {
+        code[0] = '\0';
+        env->make_new_code = false;
+        strcat(code, TEMPLATE);
+        strcat(code, "byte customChars[][8] = {\n");
+        for (size_t i = 0; i < LCD_OUTER_ROWS; i++) {
+            for (size_t j = 0; j < LCD_OUTER_COLS; j++) {
+                strcat(code, "\t{");
+                for (size_t k = 0; k < LCD_INNER_ROWS; k++) {
+                    strcat(code, "B");
+                    for (size_t l = 0; l < LCD_INNER_COLS; l++) {
+                        strcat(code, grid[i][j][k][l].clicked ? "1" : "0");
+                    }
+                    if (k < LCD_INNER_ROWS - 1) {
+                        strcat(code, ", ");
+                    }
                 }
+                sprintf(temp, "}, // %zux%zu\n", i, j);
+                strcat(code, temp);
             }
         }
+        strcat(code, "};\n");
     }
- 
+
+
+    // GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
     GuiSetStyle(DEFAULT, TEXT_ALIGNMENT_VERTICAL, TEXT_ALIGN_TOP);
-    GuiTextBox(bounds, text, MAXCODE, false);
+  
+        GuiTextBox(bounds, code, MAXCODE, false);
+    
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 16);
     GuiSetStyle(DEFAULT, TEXT_ALIGNMENT_VERTICAL, TEXT_ALIGN_CENTER);
 }
