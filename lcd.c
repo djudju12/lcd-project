@@ -1,9 +1,11 @@
 #include "lcd.h"
+#include "style_cyber.h"
 
 int main()
 {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "LCD 2000");
+    GuiLoadStyleCyber();
 
     Environment env = {0};
     env.window_active = true;
@@ -19,9 +21,7 @@ int main()
     {
         update(&env);
         BeginDrawing();
-        {
             render(&env);
-        }
         EndDrawing();
     }
 
@@ -38,6 +38,7 @@ void update(Environment *env)
         ajust_zoom(env, wheel);
     }
 
+    // TODO: check if in grid else buttons
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         check_buttons(buttons, env->mouse_pos, env);
         for (int i = 0; i < TOTAL_CELLS; i++) {
@@ -67,6 +68,7 @@ void render(Environment *env)
 
         draw_grid(pixels);
         draw_buttons(buttons);
+        draw_code(env);
     }
     EndMode2D();
 }
@@ -148,4 +150,24 @@ void ajust_zoom(Environment *env, float wheel)
     env->camera.zoom += (wheel*zoom_increment);
 
     if (env->camera.zoom < 1.0f) env->camera.zoom = 1.0f;
+}
+
+void draw_code(Environment *env)
+{
+    Rectangle bounds = {
+        0,
+        WINDOW_HEIGHT/2,
+        400,
+        400
+    };
+    
+    char text[MAXCODE] = {
+        "void main() {\n"
+        "    printf(\"Hello World!\");\n"
+        "}\n"
+    };
+
+    GuiSetStyle(DEFAULT, TEXT_ALIGNMENT_VERTICAL, TEXT_ALIGN_TOP);
+    GuiTextBox(bounds, text, MAXCODE, false);
+    GuiSetStyle(DEFAULT, TEXT_ALIGNMENT_VERTICAL, TEXT_ALIGN_CENTER);
 }

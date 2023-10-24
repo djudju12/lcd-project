@@ -25,6 +25,7 @@
 #define GRID_WIDTH     ((CELL_SIZE + CELL_OFFSETX*(LCD_OUTER_COLS-1) + (CELL_SIZE+CELL_MARGIN)*(LCD_INNER_COLS-1 + LCD_INNER_COLS*(LCD_OUTER_COLS-1)))/2)
 
 #define MAXBUTTONS 8
+#define MAXCODE    1024
 
 typedef struct {
     Rectangle pos;
@@ -52,6 +53,8 @@ void draw_buttons(Button[]);
 void init_buttons(Button buttons[]);
 void check_buttons(Button[], Vector2 clickpos, Environment *);
 bool register_button(Button);
+
+void draw_code(Environment *);
 
 void toggle_pixel(Pixel *);
 
